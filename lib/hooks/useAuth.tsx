@@ -14,6 +14,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { UserSource } from "@/lib/types/source";
 
 /**
  * User profile data stored in Firestore
@@ -29,12 +30,7 @@ export interface UserProfile {
   createdAt: Date;
   sermonCount: number;
   totalUpvotes: number;
-  externalSources: Array<{
-    name: string;
-    type: string;
-    url: string;
-    apiKey?: string;
-  }>;
+  externalSources: UserSource[];
 }
 
 /**
