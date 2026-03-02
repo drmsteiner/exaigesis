@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check file size (max 10MB)
+    function isValidSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // Helper function to check allowed file types
+    function isAllowedType() {
+      return request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('application/msword') ||
+             request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.*') ||
+             request.resource.contentType.matches('text/.*') ||
+             request.resource.contentType.matches('image/.*') ||
+             request.resource.contentType.matches('audio/.*');
+    }
+
+    // User profile images
+    match /users/{userId}/profile/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() &&
+                      request.auth.uid == userId &&
+                      isValidSize() &&
+                      request.resource.contentType.matches('image/.*');
+    }
+
+    // Sermon attachments (PDFs, docs, images, audio)
+    match /sermons/{sermonId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() &&
+                      isValidSize() &&
+                      isAllowedType();
+    }
+
+    // Temporary uploads during sermon creation
+    match /temp/{userId}/{allPaths=**} {
+      allow read, write: if isAuthenticated() &&
+                            request.auth.uid == userId &&
+                            isValidSize();
+    }
+  }
+}

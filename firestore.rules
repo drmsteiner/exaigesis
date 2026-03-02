@@ -1,0 +1,76 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is the owner
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // Users collection - users can read all profiles, but only edit their own
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update, delete: if isOwner(userId);
+    }
+
+    // Sermons collection
+    match /sermons/{sermonId} {
+      // Anyone authenticated can read public/community sermons, or their own private sermons
+      allow read: if isAuthenticated() && (
+        resource.data.visibility == "public" ||
+        resource.data.visibility == "community" ||
+        resource.data.authorId == request.auth.uid
+      );
+
+      // Anyone authenticated can create a sermon
+      allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid;
+
+      // Only the author can update/delete their sermon
+      allow update, delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+
+      // Votes subcollection - users can only vote once (their vote doc ID = their user ID)
+      match /votes/{voterId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isAuthenticated() && isOwner(voterId);
+        allow delete: if isOwner(voterId);
+      }
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update, delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+      }
+    }
+
+    // External sources collection
+    match /externalSources/{sourceId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && (
+        resource.data.addedBy == request.auth.uid || isAdmin()
+      );
+    }
+
+    // AI chat sessions - private to each user
+    match /aiSessions/{sessionId} {
+      allow read, write: if isAuthenticated() && (
+        resource == null || resource.data.userId == request.auth.uid
+      );
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+  }
+}

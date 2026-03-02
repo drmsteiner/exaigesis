@@ -1,26 +1,208 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
+
+/*
+  SEU Brand Colors (Southeastern University)
+  Primary: Fire Red #CE0019
+  Secondary: Cool Gray #C1C6C8
+  Neutral: Black #000000, White #FFFFFF
+*/
 
 @theme inline {
+  /* Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* Fonts - SEU Brand */
+  --font-sans: var(--font-montserrat), system-ui, sans-serif;
+  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-mono: ui-monospace, monospace;
+
+  /* SEU Custom Colors */
+  --color-seu-red: #CE0019;
+  --color-seu-red-hover: #A80015;
+  --color-seu-red-light: #FDE8EB;
+  --color-seu-gray: #C1C6C8;
+  --color-seu-gray-light: #F4F5F5;
+  --color-seu-black: #000000;
+  --color-seu-white: #FFFFFF;
+  --color-seu-success: #2E7D32;
+  --color-seu-warning: #F9A825;
+
+  /* Shadcn theme variables */
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* SEU-branded light theme */
+  --radius: 0.5rem;
+  --background: #FFFFFF;
+  --foreground: #000000;
+  --card: #FFFFFF;
+  --card-foreground: #000000;
+  --popover: #FFFFFF;
+  --popover-foreground: #000000;
+
+  /* Primary = SEU Fire Red */
+  --primary: #CE0019;
+  --primary-foreground: #FFFFFF;
+
+  /* Secondary = SEU Cool Gray */
+  --secondary: #F4F5F5;
+  --secondary-foreground: #000000;
+
+  --muted: #F4F5F5;
+  --muted-foreground: #6B7280;
+  --accent: #FDE8EB;
+  --accent-foreground: #CE0019;
+  --destructive: #DC2626;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #CE0019;
+
+  /* Chart colors */
+  --chart-1: #CE0019;
+  --chart-2: #C1C6C8;
+  --chart-3: #2E7D32;
+  --chart-4: #F9A825;
+  --chart-5: #1E40AF;
+
+  /* Sidebar */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #CE0019;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #FDE8EB;
+  --sidebar-accent-foreground: #CE0019;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #CE0019;
+}
+
+.dark {
+  /* SEU-branded dark theme */
+  --background: #0A0A0A;
+  --foreground: #FAFAFA;
+  --card: #171717;
+  --card-foreground: #FAFAFA;
+  --popover: #171717;
+  --popover-foreground: #FAFAFA;
+
+  /* Primary stays SEU Fire Red */
+  --primary: #CE0019;
+  --primary-foreground: #FFFFFF;
+
+  --secondary: #262626;
+  --secondary-foreground: #FAFAFA;
+  --muted: #262626;
+  --muted-foreground: #A3A3A3;
+  --accent: #3D1216;
+  --accent-foreground: #FCA5A5;
+  --destructive: #DC2626;
+  --border: #262626;
+  --input: #262626;
+  --ring: #CE0019;
+
+  /* Chart colors - adjusted for dark */
+  --chart-1: #EF4444;
+  --chart-2: #C1C6C8;
+  --chart-3: #4ADE80;
+  --chart-4: #FACC15;
+  --chart-5: #60A5FA;
+
+  /* Sidebar - dark */
+  --sidebar: #171717;
+  --sidebar-foreground: #FAFAFA;
+  --sidebar-primary: #CE0019;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #3D1216;
+  --sidebar-accent-foreground: #FCA5A5;
+  --sidebar-border: #262626;
+  --sidebar-ring: #CE0019;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Typography hierarchy using SEU fonts */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-montserrat), system-ui, sans-serif;
+    font-weight: 600;
+  }
+
+  /* Accent text uses Playfair */
+  .font-accent {
+    font-family: var(--font-playfair), Georgia, serif;
+  }
+
+  /* Scripture references - elegant styling */
+  .scripture-ref {
+    font-family: var(--font-playfair), Georgia, serif;
+    font-style: italic;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom utility classes for SEU branding */
+@layer utilities {
+  .text-seu-red {
+    color: #CE0019;
+  }
+
+  .bg-seu-red {
+    background-color: #CE0019;
+  }
+
+  .bg-seu-red-light {
+    background-color: #FDE8EB;
+  }
+
+  .border-seu-red {
+    border-color: #CE0019;
+  }
+
+  .hover\:bg-seu-red-hover:hover {
+    background-color: #A80015;
+  }
 }
