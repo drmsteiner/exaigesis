@@ -1,7 +1,7 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getAuth, Auth } from "firebase/auth";
-import { getFirestore, Firestore } from "firebase/firestore";
-import { getStorage, FirebaseStorage } from "firebase/storage";
+import { getAuth, Auth, connectAuthEmulator } from "firebase/auth";
+import { getFirestore, Firestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getStorage, FirebaseStorage, connectStorageEmulator } from "firebase/storage";
 
 /**
  * Firebase configuration for exAIgesis
@@ -35,5 +35,17 @@ if (getApps().length === 0) {
 auth = getAuth(app);
 db = getFirestore(app);
 storage = getStorage(app);
+
+// Connect to emulators in development if enabled
+const useEmulators = process.env.NEXT_PUBLIC_USE_EMULATORS === "true";
+let emulatorsConnected = false;
+
+if (useEmulators && typeof window !== "undefined" && !emulatorsConnected) {
+  connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
+  connectFirestoreEmulator(db, "localhost", 8080);
+  connectStorageEmulator(storage, "localhost", 9199);
+  emulatorsConnected = true;
+  console.log("Connected to Firebase emulators");
+}
 
 export { app, auth, db, storage };
