@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Montserrat, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { Providers } from "@/components/providers/Providers";
 
 // SEU Brand Fonts
 const montserrat = Montserrat({
@@ -40,8 +41,10 @@ export default function RootLayout({
       <body
         className={`${montserrat.variable} ${playfairDisplay.variable} font-sans antialiased`}
       >
-        {children}
-        <Toaster position="top-right" />
+        <Providers>
+          {children}
+          <Toaster position="top-right" />
+        </Providers>
       </body>
     </html>
   );
