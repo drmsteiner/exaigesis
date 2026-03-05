@@ -52,6 +52,30 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 /**
+ * Create a new user profile in Firestore
+ */
+async function createUserProfile(firebaseUser: User): Promise<UserProfile> {
+  const newProfile: UserProfile = {
+    uid: firebaseUser.uid,
+    displayName: firebaseUser.displayName || "Anonymous",
+    email: firebaseUser.email || "",
+    photoURL: firebaseUser.photoURL,
+    role: "user",
+    createdAt: new Date(),
+    sermonCount: 0,
+    totalUpvotes: 0,
+    externalSources: [],
+  };
+
+  await setDoc(doc(db, "users", firebaseUser.uid), {
+    ...newProfile,
+    createdAt: serverTimestamp(),
+  });
+
+  return newProfile;
+}
+
+/**
  * Provider component that wraps the app and provides auth context
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -89,30 +113,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => unsubscribe();
   }, []);
-
-  /**
-   * Create a new user profile in Firestore
-   */
-  async function createUserProfile(firebaseUser: User): Promise<UserProfile> {
-    const newProfile: UserProfile = {
-      uid: firebaseUser.uid,
-      displayName: firebaseUser.displayName || "Anonymous",
-      email: firebaseUser.email || "",
-      photoURL: firebaseUser.photoURL,
-      role: "user",
-      createdAt: new Date(),
-      sermonCount: 0,
-      totalUpvotes: 0,
-      externalSources: [],
-    };
-
-    await setDoc(doc(db, "users", firebaseUser.uid), {
-      ...newProfile,
-      createdAt: serverTimestamp(),
-    });
-
-    return newProfile;
-  }
 
   /**
    * Sign in with email and password

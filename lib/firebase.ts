@@ -21,20 +21,13 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase only once (prevents errors in Next.js hot reload)
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
+const app: FirebaseApp = getApps().length === 0
+  ? initializeApp(firebaseConfig)
+  : getApps()[0];
 
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0];
-}
-
-auth = getAuth(app);
-db = getFirestore(app);
-storage = getStorage(app);
+const auth: Auth = getAuth(app);
+const db: Firestore = getFirestore(app);
+const storage: FirebaseStorage = getStorage(app);
 
 // Connect to emulators in development if enabled
 const useEmulators = process.env.NEXT_PUBLIC_USE_EMULATORS === "true";

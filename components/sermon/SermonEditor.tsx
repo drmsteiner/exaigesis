@@ -79,7 +79,7 @@ export function SermonEditor({ initialData, sermonId, onSave }: SermonEditorProp
         onSave?.(newId);
         router.push(`/sermons/${newId}`);
       }
-    } catch (err) {
+    } catch {
       toast.error(isEditing ? "Failed to update sermon" : "Failed to create sermon");
     }
   }

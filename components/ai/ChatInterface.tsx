@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
-import { useAIChat, ChatMessage } from "@/lib/hooks/useAIChat";
+import { useAIChat } from "@/lib/hooks/useAIChat";
 import { MessageBubble } from "./MessageBubble";
 import { Send, Loader2, StopCircle, Sparkles, RefreshCw } from "lucide-react";
 

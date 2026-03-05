@@ -387,34 +387,41 @@ export function useSermons() {
 /**
  * Hook for real-time sermon updates
  */
-export function useSermonRealtime(sermonId: string) {
-  const [sermon, setSermon] = useState<Sermon | null>(null);
-  const [loading, setLoading] = useState(true);
+export function useSermonRealtime(sermonId: string | undefined) {
+  // Initialize loading based on whether we have a sermonId to fetch
+  const [state, setState] = useState<{ sermon: Sermon | null; loading: boolean }>({
+    sermon: null,
+    loading: !!sermonId,
+  });
 
   useEffect(() => {
     if (!sermonId) {
-      setLoading(false);
       return;
     }
 
+    let isSubscribed = true;
+
     const unsubscribe = onSnapshot(
       doc(db, "sermons", sermonId),
-      (doc) => {
-        if (doc.exists()) {
-          setSermon({ id: doc.id, ...doc.data() } as Sermon);
-        } else {
-          setSermon(null);
-        }
-        setLoading(false);
+      (snapshot) => {
+        if (!isSubscribed) return;
+        setState({
+          sermon: snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } as Sermon : null,
+          loading: false,
+        });
       },
       (error) => {
+        if (!isSubscribed) return;
         console.error("Error listening to sermon:", error);
-        setLoading(false);
+        setState(prev => ({ ...prev, loading: false }));
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      isSubscribed = false;
+      unsubscribe();
+    };
   }, [sermonId]);
 
-  return { sermon, loading };
+  return state;
 }
