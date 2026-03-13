@@ -13,6 +13,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { useCommentary } from "@/lib/hooks/useCommentary";
 
 /**
  * Chat message structure
@@ -40,7 +41,11 @@ export interface AISession {
 /**
  * System prompt for the sermon prep assistant
  */
-function buildSystemPrompt(scripture?: string, sources?: string[]): string {
+function buildSystemPrompt(
+  scripture?: string,
+  sources?: string[],
+  commentaryContent?: string
+): string {
   let prompt = `You are exAIgesis, an AI sermon preparation assistant for Southeastern University. You help pastors, ministry students, and church leaders prepare biblically faithful, theologically sound, and practically applicable sermons.
 
 Your role is to:
@@ -66,6 +71,11 @@ Guidelines:
     prompt += `\nThe user has these external sources connected: ${sources.join(", ")}\n`;
   }
 
+  if (commentaryContent) {
+    prompt += `\n${commentaryContent}`;
+    prompt += `\nWhen referencing information from thebiblesays.com, always attribute it appropriately (e.g., "According to thebiblesays.com...").\n`;
+  }
+
   return prompt;
 }
 
@@ -74,6 +84,7 @@ Guidelines:
  */
 export function useAIChat(sessionId?: string) {
   const { user, profile } = useAuth();
+  const { getCommentaryForScripture, formatCommentaryForAI } = useCommentary();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -147,10 +158,21 @@ export function useAIChat(sessionId?: string) {
           sessionIdToUse = await createSession(scripture);
         }
 
+        // Fetch commentary if theBibleSays is enabled and scripture is provided
+        let commentaryContent = "";
+        const theBibleSaysEnabled = profile.builtInSources?.theBibleSays ?? true;
+        if (scripture && theBibleSaysEnabled) {
+          const commentaries = await getCommentaryForScripture(scripture);
+          if (commentaries.length > 0) {
+            commentaryContent = formatCommentaryForAI(commentaries);
+          }
+        }
+
         // Build messages array for Ollama
         const systemPrompt = buildSystemPrompt(
           scripture,
-          profile.externalSources?.map((s) => s.name)
+          profile.externalSources?.map((s) => s.name),
+          commentaryContent
         );
 
         const ollamaMessages = [
@@ -213,7 +235,7 @@ export function useAIChat(sessionId?: string) {
         abortControllerRef.current = null;
       }
     },
-    [user, profile, messages, currentSessionId, createSession]
+    [user, profile, messages, currentSessionId, createSession, getCommentaryForScripture, formatCommentaryForAI]
   );
 
   /**

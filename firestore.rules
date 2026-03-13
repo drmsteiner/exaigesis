@@ -72,5 +72,11 @@ service cloud.firestore {
       );
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
     }
+
+    // thebiblesays.com commentary - read by all authenticated users, write by admins only
+    match /thebiblesays/{commentaryId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
   }
 }

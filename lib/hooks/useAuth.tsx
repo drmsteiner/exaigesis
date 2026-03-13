@@ -17,6 +17,13 @@ import { auth, db } from "@/lib/firebase";
 import { UserSource } from "@/lib/types/source";
 
 /**
+ * Built-in AI content sources that can be toggled
+ */
+export interface BuiltInSources {
+  theBibleSays: boolean;
+}
+
+/**
  * User profile data stored in Firestore
  */
 export interface UserProfile {
@@ -31,6 +38,7 @@ export interface UserProfile {
   sermonCount: number;
   totalUpvotes: number;
   externalSources: UserSource[];
+  builtInSources?: BuiltInSources;
 }
 
 /**
@@ -65,6 +73,9 @@ async function createUserProfile(firebaseUser: User): Promise<UserProfile> {
     sermonCount: 0,
     totalUpvotes: 0,
     externalSources: [],
+    builtInSources: {
+      theBibleSays: true, // Enable by default for new users
+    },
   };
 
   await setDoc(doc(db, "users", firebaseUser.uid), {

@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, BookOpen } from "lucide-react";
 
 export default function SettingsPage() {
   const { user, profile, updateUserProfile } = useAuth();
@@ -16,6 +17,19 @@ export default function SettingsPage() {
   const [church, setChurch] = useState(profile?.church || "");
   const [denomination, setDenomination] = useState(profile?.denomination || "");
   const [isLoading, setIsLoading] = useState(false);
+  const [theBibleSaysEnabled, setTheBibleSaysEnabled] = useState(
+    profile?.builtInSources?.theBibleSays ?? true
+  );
+
+  // Sync state when profile loads
+  useEffect(() => {
+    if (profile) {
+      setDisplayName(profile.displayName || "");
+      setChurch(profile.church || "");
+      setDenomination(profile.denomination || "");
+      setTheBibleSaysEnabled(profile.builtInSources?.theBibleSays ?? true);
+    }
+  }, [profile]);
 
   const initials = profile?.displayName
     ?.split(" ")
@@ -37,6 +51,27 @@ export default function SettingsPage() {
       toast.error("Failed to update profile");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleToggleTheBibleSays(enabled: boolean) {
+    setTheBibleSaysEnabled(enabled);
+    try {
+      await updateUserProfile({
+        builtInSources: {
+          ...profile?.builtInSources,
+          theBibleSays: enabled,
+        },
+      });
+      toast.success(
+        enabled
+          ? "thebiblesays.com enabled as AI source"
+          : "thebiblesays.com disabled as AI source"
+      );
+    } catch {
+      // Revert on error
+      setTheBibleSaysEnabled(!enabled);
+      toast.error("Failed to update AI source setting");
     }
   }
 
@@ -130,6 +165,35 @@ export default function SettingsPage() {
               </>
             )}
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* AI Sources Card */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            AI Sources
+          </CardTitle>
+          <CardDescription>
+            Control which content sources the AI can reference when helping you
+            prepare sermons
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <p className="font-medium">thebiblesays.com</p>
+              <p className="text-sm text-muted-foreground">
+                Include biblical commentary from thebiblesays.com when
+                discussing relevant passages
+              </p>
+            </div>
+            <Switch
+              checked={theBibleSaysEnabled}
+              onCheckedChange={handleToggleTheBibleSays}
+            />
+          </div>
         </CardContent>
       </Card>
 
