@@ -1,11 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Library, Plus, Globe, BookText, Languages, FileText } from "lucide-react";
+import { Library, Plus, Globe, BookText, Languages, FileText, Heart, Rss, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AddSourceDialog } from "@/components/sources/AddSourceDialog";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { SourceType, getSourceTypeName } from "@/lib/types/source";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
-const sourceTypes = [
+const sourceTypes: {
+  type: SourceType;
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  examples: string;
+}[] = [
   {
     type: "commentary",
     title: "Bible Commentary",
@@ -28,15 +40,57 @@ const sourceTypes = [
     examples: "Desiring God, Gospel Coalition",
   },
   {
-    type: "custom",
-    title: "Custom URL",
+    type: "devotional",
+    title: "Devotional Resources",
+    description: "Daily devotionals and spiritual insights",
+    icon: Heart,
+    examples: "Our Daily Bread, Spurgeon's",
+  },
+  {
+    type: "custom_api",
+    title: "Custom API",
     description: "Any web resource or API endpoint",
     icon: Globe,
     examples: "Your church's resource library",
   },
+  {
+    type: "rss",
+    title: "RSS Feed",
+    description: "Subscribe to blog and news feeds",
+    icon: Rss,
+    examples: "Sermon blogs, ministry updates",
+  },
 ];
 
+function getIconForType(type: SourceType) {
+  const sourceType = sourceTypes.find((s) => s.type === type);
+  return sourceType?.icon || Globe;
+}
+
 export default function SourcesPage() {
+  const { profile, updateUserProfile } = useAuth();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState<SourceType | undefined>();
+
+  const userSources = profile?.externalSources || [];
+
+  function handleOpenDialog(type?: SourceType) {
+    setSelectedType(type);
+    setDialogOpen(true);
+  }
+
+  async function handleRemoveSource(sourceId: string) {
+    if (!profile) return;
+
+    try {
+      const updatedSources = userSources.filter((s) => s.sourceId !== sourceId);
+      await updateUserProfile({ externalSources: updatedSources });
+      toast.success("Source removed");
+    } catch {
+      toast.error("Failed to remove source");
+    }
+  }
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
@@ -49,7 +103,10 @@ export default function SourcesPage() {
             Connect external resources for the AI to reference during sermon prep
           </p>
         </div>
-        <Button className="bg-seu-red hover:bg-seu-red-hover">
+        <Button
+          className="bg-seu-red hover:bg-seu-red-hover"
+          onClick={() => handleOpenDialog()}
+        >
           <Plus className="mr-2 h-4 w-4" />
           Add Source
         </Button>
@@ -62,19 +119,72 @@ export default function SourcesPage() {
         </TabsList>
 
         <TabsContent value="my">
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>No Sources Connected</CardTitle>
-              <CardDescription>
-                Add external sources to give the AI more context during sermon preparation.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          {userSources.length === 0 ? (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>No Sources Connected</CardTitle>
+                <CardDescription>
+                  Add external sources to give the AI more context during sermon preparation.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant="outline"
+                  onClick={() => handleOpenDialog()}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Your First Source
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4 mb-6">
+              {userSources.map((source) => {
+                const Icon = getIconForType(source.type);
+                return (
+                  <Card key={source.sourceId}>
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-seu-red-light flex items-center justify-center">
+                            <Icon className="h-5 w-5 text-seu-red" />
+                          </div>
+                          <div className="flex-1">
+                            <CardTitle className="text-lg">{source.name}</CardTitle>
+                            <CardDescription className="flex items-center gap-2 mt-1">
+                              <Badge variant="secondary" className="text-xs">
+                                {getSourceTypeName(source.type)}
+                              </Badge>
+                            </CardDescription>
+                            <p className="text-xs text-muted-foreground mt-2 truncate max-w-[250px]">
+                              {source.url}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-red-600"
+                          onClick={() => handleRemoveSource(source.sourceId)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
 
           <h2 className="text-xl font-semibold mb-4">Available Source Types</h2>
           <div className="grid md:grid-cols-2 gap-4">
             {sourceTypes.map((source) => (
-              <Card key={source.type} className="hover:shadow-lg transition-shadow cursor-pointer">
+              <Card
+                key={source.type}
+                className="hover:shadow-lg transition-shadow cursor-pointer hover:border-seu-red/50"
+                onClick={() => handleOpenDialog(source.type)}
+              >
                 <CardHeader>
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
@@ -110,6 +220,12 @@ export default function SourcesPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AddSourceDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        initialType={selectedType}
+      />
     </div>
   );
 }
