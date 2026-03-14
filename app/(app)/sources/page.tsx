@@ -110,16 +110,17 @@ export default function SourcesPage() {
             Connect external resources for the AI to reference during sermon prep
           </p>
         </div>
-        <Button
-          className="bg-seu-red hover:bg-seu-red-hover"
+        <button
+          type="button"
+          className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-seu-red hover:bg-seu-red-hover text-white"
           onClick={() => {
-            alert("Button clicked!");
+            alert("Native button clicked!");
             handleOpenDialog();
           }}
         >
           <Plus className="mr-2 h-4 w-4" />
           Add Source
-        </Button>
+        </button>
       </div>
 
       <Tabs defaultValue="my" className="w-full">
