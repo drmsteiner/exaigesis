@@ -112,7 +112,10 @@ export default function SourcesPage() {
         </div>
         <Button
           className="bg-seu-red hover:bg-seu-red-hover"
-          onClick={() => handleOpenDialog()}
+          onClick={() => {
+            alert("Button clicked!");
+            handleOpenDialog();
+          }}
         >
           <Plus className="mr-2 h-4 w-4" />
           Add Source
