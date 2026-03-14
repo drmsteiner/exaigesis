@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,6 +61,13 @@ export function AddSourceDialog({
     apiKeyRequired: false,
   });
   const [apiKey, setApiKey] = useState("");
+
+  // Update form type when initialType changes (when opening from a source type card)
+  useEffect(() => {
+    if (initialType) {
+      setFormData((prev) => ({ ...prev, type: initialType }));
+    }
+  }, [initialType]);
 
   function resetForm() {
     setFormData({
