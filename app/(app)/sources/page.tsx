@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Library, Plus, Globe, BookText, Languages, FileText, Heart, Rss, Trash2 } from "lucide-react";
@@ -74,9 +74,16 @@ export default function SourcesPage() {
 
   const userSources = profile?.externalSources || [];
 
+  // Debug: log when dialogOpen changes
+  useEffect(() => {
+    console.log("dialogOpen changed to:", dialogOpen);
+  }, [dialogOpen]);
+
   function handleOpenDialog(type?: SourceType) {
+    console.log("handleOpenDialog called, type:", type);
     setSelectedType(type);
     setDialogOpen(true);
+    console.log("dialogOpen set to true");
   }
 
   async function handleRemoveSource(sourceId: string) {
