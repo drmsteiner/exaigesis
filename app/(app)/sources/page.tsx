@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Library, Plus, Globe, BookText, Languages, FileText, Heart, Rss, Trash2 } from "lucide-react";
@@ -74,16 +74,9 @@ export default function SourcesPage() {
 
   const userSources = profile?.externalSources || [];
 
-  // Debug: log when dialogOpen changes
-  useEffect(() => {
-    console.log("dialogOpen changed to:", dialogOpen);
-  }, [dialogOpen]);
-
   function handleOpenDialog(type?: SourceType) {
-    console.log("handleOpenDialog called, type:", type);
     setSelectedType(type);
     setDialogOpen(true);
-    console.log("dialogOpen set to true");
   }
 
   async function handleRemoveSource(sourceId: string) {
@@ -110,17 +103,13 @@ export default function SourcesPage() {
             Connect external resources for the AI to reference during sermon prep
           </p>
         </div>
-        <button
-          type="button"
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-seu-red hover:bg-seu-red-hover text-white"
-          onClick={() => {
-            alert("Native button clicked!");
-            handleOpenDialog();
-          }}
+        <Button
+          className="bg-seu-red hover:bg-seu-red-hover"
+          onClick={() => handleOpenDialog()}
         >
           <Plus className="mr-2 h-4 w-4" />
           Add Source
-        </button>
+        </Button>
       </div>
 
       <Tabs defaultValue="my" className="w-full">
