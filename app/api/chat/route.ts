@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const MINIMAX_API_URL = "https://api.minimax.io/v1/chat/completions";
 const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY;
-const DEFAULT_MODEL = process.env.MINIMAX_MODEL || "MiniMax-Text-01";
+const DEFAULT_MODEL = process.env.MINIMAX_MODEL || "MiniMax-M2.5-Lightning";
 
 interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -96,9 +96,14 @@ export async function POST(request: NextRequest) {
     // Extract the assistant's response from OpenAI format
     const assistantMessage = data.choices?.[0]?.message;
 
+    // Strip <think>...</think> reasoning blocks from response
+    // MiniMax models include chain-of-thought reasoning that shouldn't be shown to users
+    let content = assistantMessage?.content || "";
+    content = content.replace(/<think>[\s\S]*?<\/think>\s*/g, "").trim();
+
     return NextResponse.json({
-      message: assistantMessage,
-      response: assistantMessage?.content,
+      message: { ...assistantMessage, content },
+      response: content,
       model: data.model,
       created_at: new Date().toISOString(),
       done: true,
