@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * API route for AI chat using Ollama with MiniMax M2.5
+ * API route for AI chat using MiniMax API directly
  *
- * This route proxies chat requests to the local Ollama server.
- * In production, you might want to add authentication and rate limiting.
+ * This route calls the MiniMax API (OpenAI-compatible endpoint).
+ * Requires MINIMAX_API_KEY environment variable to be set.
  */
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-const DEFAULT_MODEL = process.env.OLLAMA_MODEL || "minimax-m2.5:cloud";
+const MINIMAX_API_URL = "https://api.minimax.io/v1/chat/completions";
+const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY;
+const DEFAULT_MODEL = process.env.MINIMAX_MODEL || "MiniMax-Text-01";
 
 interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -23,6 +24,17 @@ interface ChatRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if API key is configured
+    if (!MINIMAX_API_KEY) {
+      return NextResponse.json(
+        {
+          error: "MiniMax API key not configured",
+          details: "Add MINIMAX_API_KEY to your .env.local file",
+        },
+        { status: 500 }
+      );
+    }
+
     const body: ChatRequest = await request.json();
     const { messages, model = DEFAULT_MODEL, stream = false } = body;
 
@@ -33,10 +45,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call Ollama API
-    const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+    // Call MiniMax API (OpenAI-compatible endpoint)
+    const minimaxResponse = await fetch(MINIMAX_API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${MINIMAX_API_KEY}`,
+      },
       body: JSON.stringify({
         model,
         messages,
@@ -44,46 +59,60 @@ export async function POST(request: NextRequest) {
       }),
     });
 
-    if (!ollamaResponse.ok) {
-      const errorText = await ollamaResponse.text();
-      console.error("Ollama error:", errorText);
+    if (!minimaxResponse.ok) {
+      const errorText = await minimaxResponse.text();
+      console.error("MiniMax API error:", errorText);
 
-      // Check if Ollama is not running
-      if (ollamaResponse.status === 404 || ollamaResponse.status === 502) {
+      // Handle common error cases
+      if (minimaxResponse.status === 401) {
         return NextResponse.json(
           {
-            error: "AI service unavailable",
-            details: "Ollama is not running. Start it with: ollama serve",
+            error: "Invalid API key",
+            details: "Check that your MINIMAX_API_KEY is correct",
           },
-          { status: 503 }
+          { status: 401 }
+        );
+      }
+
+      if (minimaxResponse.status === 429) {
+        return NextResponse.json(
+          {
+            error: "Rate limit exceeded",
+            details: "Too many requests. Please wait and try again.",
+          },
+          { status: 429 }
         );
       }
 
       return NextResponse.json(
         { error: "AI request failed", details: errorText },
-        { status: ollamaResponse.status }
+        { status: minimaxResponse.status }
       );
     }
 
-    // For non-streaming response
-    const data = await ollamaResponse.json();
+    // Parse the OpenAI-compatible response
+    const data = await minimaxResponse.json();
+
+    // Extract the assistant's response from OpenAI format
+    const assistantMessage = data.choices?.[0]?.message;
 
     return NextResponse.json({
-      message: data.message,
-      response: data.message?.content,
+      message: assistantMessage,
+      response: assistantMessage?.content,
       model: data.model,
-      created_at: data.created_at,
-      done: data.done,
+      created_at: new Date().toISOString(),
+      done: true,
+      usage: data.usage,
     });
   } catch (error) {
     console.error("Chat API error:", error);
 
-    // Check if it's a connection error (Ollama not running)
+    // Check if it's a network error
     if (error instanceof TypeError && error.message.includes("fetch")) {
       return NextResponse.json(
         {
-          error: "Cannot connect to AI service",
-          details: "Make sure Ollama is running: ollama serve",
+          error: "Cannot connect to MiniMax API",
+          details: "Check your internet connection",
         },
         { status: 503 }
       );
