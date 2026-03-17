@@ -184,13 +184,12 @@ export function useAIChat(sessionId?: string) {
         // Create abort controller for cancellation
         abortControllerRef.current = new AbortController();
 
-        // Call Ollama API
+        // Call MiniMax API
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: ollamaMessages,
-            model: "minimax-m2.5:cloud",
           }),
           signal: abortControllerRef.current.signal,
         });
